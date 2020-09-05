@@ -1,6 +1,7 @@
 .*
 !/.gitignore
 .ipynb_checkpoints/
+__pycache__/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
@@ -13,4 +14,3 @@ Desktop.ini
 temp/
 tmp/
 Icon[]
-
