@@ -1,3 +1,5 @@
+#cython: language_level=3
+
 cdef long INIT = -1 # initial value of output pixels
 cdef long MASK = -2 # initial value of a threshold level
 cdef long INQUEUE = -3 # value assigned to pixels put into the queue
