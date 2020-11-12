@@ -6,6 +6,20 @@ def bgr2rgb(im):
     from cv2 import cvtColor, COLOR_BGR2RGB
     return cvtColor(im, COLOR_BGR2RGB)
 
+def __ipython_image(im):
+    """
+    Takes a numpy array, encodes it into a PNG, and creates the IPython Image for it.
+
+    This will deal with floating-point images.
+    """
+    from cv2 import imencode
+    from IPython.display import Image
+    if im.dtype.kind == 'f':
+        im = im * 255
+        im = im.clip(0, 255, im).astype('uint8')
+    return Image(imencode('.png', bgr2rgb(im))[1].tostring(),
+                 width=im.shape[1], height=im.shape[0])
+
 def run_video(process_frame=lambda im:im, fps=30, camera_num=0):
     """
     Runs OpenCV video from a connected camera as Jupyter notebook output. Each frame from the camera
@@ -17,8 +31,8 @@ def run_video(process_frame=lambda im:im, fps=30, camera_num=0):
     The video will continue being run until the code is interrupted with the stop button in Jupyter
     notebook.
     """
-    from cv2 import VideoCapture, error, imencode
-    from IPython.display import Image, display
+    from cv2 import VideoCapture
+    from IPython.display import display
     from time import time, sleep
     delay = 1/fps # the max number of seconds between frames
     vc = VideoCapture(camera_num)
@@ -27,9 +41,9 @@ def run_video(process_frame=lambda im:im, fps=30, camera_num=0):
         # Try to get the first frame
         is_capturing, frame = vc.read()
         if frame is None: return # no first frame
-        # Process the frame, encode it as PNG, and display it
+        # Process the frame and display it
         im = process_frame(bgr2rgb(frame))
-        disp = display(Image(imencode('.png', bgr2rgb(im))[1].tostring(), width=im.shape[1], height=im.shape[0]), display_id=True)
+        disp = display(__ipython_image(im), display_id=True)
         while is_capturing:
             # Keep getting new frames while they are available
             try:
@@ -37,9 +51,9 @@ def run_video(process_frame=lambda im:im, fps=30, camera_num=0):
                 # Get the next frame
                 is_capturing, frame = vc.read()
                 if frame is None: break # no next frame
-                # Process the frame, encode it as PNG, and display it
-                im = process_frame(bgr2rgb(frame)).clip(0, 255).astype('uint8', copy=False)
-                disp.update(Image(imencode('.png', bgr2rgb(im))[1].tostring(), width=im.shape[1], height=im.shape[0]))
+                # Process the frame and display it
+                im = process_frame(bgr2rgb(frame))
+                disp.update(__ipython_image(im))
                 # Wait for a small amount of time to avoid frame rate going to high
                 wait = delay - (time() - start)
                 if wait > 0: sleep(wait)
